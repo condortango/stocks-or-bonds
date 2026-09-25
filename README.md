@@ -4,7 +4,7 @@ A one-page calculator that asks a single question: if you buy the S&P 500 today 
 
 **Live:** https://condortango.github.io/stocks-or-bonds/
 
-The left side is locked to real market values as of Sep 25, 2026. On the right, sliders let you set what you think those inputs will be a year from now. The page reprices the index with the Gordon growth model, adds dividends, and compares the result to the 10-year yield.
+The left side is locked to real market values, loaded from `data.json` and refreshed daily by a GitHub Action (see [Daily data refresh](#daily-data-refresh)). On the right, sliders let you set what you think those inputs will be a year from now. The page reprices the index with the Gordon growth model, adds dividends, and compares the result to the 10-year yield.
 
 ## The model
 
@@ -92,6 +92,8 @@ If you typed 15.2% in as long-run g, then $r - g$ would go negative and the mode
 
 ## Worked example with the defaults
 
+These are the values from the Sep 25, 2026 snapshot. The live page uses whatever is in `data.json` today.
+
 | | Today | 1 year out |
 |---|---|---|
 | r_f | 5.18% | 5.18% |
@@ -106,26 +108,48 @@ The price return is +15.20%. Add the 1.05% dividend yield and stocks return +16.
 
 ## Where today's numbers come from
 
-| Input | Value | Source and date |
-|---|---|---|
-| 10-year yield | 5.18% | US Treasury curve, Sep 24, 2026 close |
-| ERP | 4.14% | Damodaran implied ERP, Sep 1, 2026 |
-| β | 1.00 | By definition for the index |
-| D₁ | $400.55 | FactSet forward P/E of 19.1 at S&P 7,650.50, Sep 18, 2026 |
-| Dividend yield | 1.05% | multpl.com (S&P data), Sep 24, 2026 |
-| S&P 500 | 7,740.28 | Sep 25, 2026, 11:10 AM PT |
-| Long-run g | 4.145% | Backed out as r − D₁/P so today's model price matches the index |
-| g₁ default | 15.2% | FactSet Earnings Insight, CY2027 EPS growth, Sep 18, 2026 |
+All Today values are read from [`data.json`](data.json), which stores each value with its source and as-of date. The page loads it on open and falls back to the Sep 25, 2026 values embedded in `index.html` if it can't (for example when you open the file straight from disk). The values below are that Sep 25, 2026 snapshot.
+
+| Input | Value | Source and date | Refresh |
+|---|---|---|---|
+| 10-year yield | 5.18% | US Treasury curve, Sep 24, 2026 close | Daily |
+| ERP | 4.14% | Damodaran implied ERP, Sep 1, 2026 | Manual |
+| β | 1.00 | By definition for the index | Manual |
+| D₁ | $400.55 | FactSet forward P/E of 19.1 at S&P 7,650.50, Sep 18, 2026 | Derived (weekly P/E) |
+| Dividend yield | 1.05% | multpl.com (S&P data), Sep 24, 2026 | Manual |
+| S&P 500 | 7,740.28 | Sep 25, 2026, 11:10 AM PT | Daily |
+| Long-run g | 4.145% | Backed out as r − D₁/P so today's model price matches the index | Derived (daily) |
+| g₁ default | 15.2% | FactSet Earnings Insight, CY2027 EPS growth, Sep 18, 2026 | Weekly |
+
+## Daily data refresh
+
+A scheduled GitHub Action ([`.github/workflows/update-data.yml`](.github/workflows/update-data.yml)) runs [`scripts/update_data.py`](scripts/update_data.py), commits `data.json` only when a value changed, and then asks GitHub Pages to rebuild.
+
+- **Schedule:** every day at 13:17 UTC, which is 6:17 AM PT in daylight time (5:17 AM PT in standard time). GitHub can start scheduled runs a few minutes late.
+- **Daily:** the 10-year yield from the [US Treasury daily par yield curve](https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve), and the S&P 500 close from [FRED series SP500](https://fred.stlouisfed.org/series/SP500). Both are the prior trading day's close at run time.
+- **Weekly:** the forward 12-month P/E, the S&P level it is quoted against, and next year's EPS growth (g₁ default) from FactSet's free [Earnings Insight](https://www.factset.com/earningsinsight) PDF, usually published on Fridays. The Friday report is picked up by Saturday's run.
+- **Derived on every run:** D₁ = S&P level in the FactSet report / forward P/E, and g = r<sub>f</sub> + β × ERP − D₁/P.
+- **Manual:** ERP, β and dividend yield. Edit their `value` and `as_of` in `data.json` and push.
+
+If a source is down or a report can't be parsed, the script keeps the previous values and the run still succeeds with a warning in the log.
+
+Run it by hand:
+
+```sh
+gh workflow run update-data.yml -R condortango/stocks-or-bonds
+```
+
+Or locally: `pip install pypdf && python scripts/update_data.py` (add `--dry-run` to only print the result).
 
 ## Limits
 
 - The bond side assumes you hold the 10-year for a year and collect its yield. It ignores price changes on the bond.
 - Gordon is very sensitive when $r - g$ is small. At today's gap of about 5.2 points, a 0.25-point move in r or g shifts the price by about 5%.
-- The Today values are a snapshot, and they don't update on their own.
+- The Today values are refreshed once a day, not live. ERP, β and dividend yield change only when someone edits `data.json`.
 
 ## Run it
 
-It's one HTML file with no build step and nothing to install. Open `index.html` in a browser, or use the live link above.
+It's one HTML file plus `data.json`, with no build step and nothing to install. Open `index.html` in a browser, or use the live link above. Opened from disk, the page shows the embedded Sep 25, 2026 values.
 
 ---
 

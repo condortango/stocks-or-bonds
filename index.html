@@ -68,7 +68,7 @@
 
   <div class="cols">
     <div class="card fixed">
-      <h2>Today <span>(Sep 25, 2026, fixed)</span></h2>
+      <h2>Today <span id="T_hdr">(Sep 25, 2026, fixed)</span></h2>
       <div><span>r<sub>f</sub>, 10-year yield</span><b id="T_rf"></b></div>
       <div><span>β, beta</span><b id="T_beta"></b></div>
       <div><span>ERP, equity risk premium</span><b id="T_erp"></b></div>
@@ -110,23 +110,17 @@
     </table>
   </div>
 
-  <p class="note">Today's values: 10-year 5.18% (Treasury curve, Sep 24 close). ERP 4.14% (Damodaran implied ERP, Sep 1, 2026). β = 1 for the index. D₁ = $400.55, forward 12-month S&amp;P 500 EPS from FactSet's forward P/E of 19.1 at 7,650.50 on Sep 18. Dividend yield 1.05% (multpl.com, S&amp;P data, Sep 24 close). Long-run g = 4.145% is backed out as r − D₁/P so today's price matches the S&amp;P 500 at 7,740.28 (Sep 25, 11:10 AM PT).</p>
-  <p class="note">g₁ starts at FactSet's CY2027 S&amp;P 500 earnings growth estimate of 15.2% (Earnings Insight, Sep 18, 2026), which lifts D₁ to $461.43. It is kept separate from long-run g because Gordon's g lasts forever and must stay below r; 15.2% as long-run g would give r − g below zero and no price.</p>
+  <p class="note" id="note_today">Today's values: 10-year 5.18% (Treasury curve, Sep 24 close). ERP 4.14% (Damodaran implied ERP, Sep 1, 2026). β = 1 for the index. D₁ = $400.55, forward 12-month S&amp;P 500 EPS from FactSet's forward P/E of 19.1 at 7,650.50 on Sep 18. Dividend yield 1.05% (multpl.com, S&amp;P data, Sep 24 close). Long-run g = 4.145% is backed out as r − D₁/P so today's price matches the S&amp;P 500 at 7,740.28 (Sep 25, 11:10 AM PT).</p>
+  <p class="note" id="note_g1">g₁ starts at FactSet's CY2027 S&amp;P 500 earnings growth estimate of 15.2% (Earnings Insight, Sep 18, 2026), which lifts D₁ to $461.43. It is kept separate from long-run g because Gordon's g lasts forever and must stay below r; 15.2% as long-run g would give r − g below zero and no price.</p>
   <p class="note">The second line in the banner is the multiple test: Δg &gt; Δr means the r − g gap is shrinking and valuations are helping; otherwise they are hurting. The bond return assumes you hold the 10-year and collect its yield for a year (price changes on the bond are ignored). Not advice.</p>
 </div>
 
 <script>
-const TODAY = { rf:5.18, beta:1.00, erp:4.14, g:4.145, D1:400.55, dy:1.05 };
-const FS_G1 = 15.2; // FactSet CY2027 EPS growth estimate, Sep 18, 2026
-const YEAR = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:FS_G1, g:TODAY.g };
-const TODAYSET = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:0, g:TODAY.g };
-const SL = [
-  { k:'rf',   name:'r<sub>f</sub>, 10-year yield',                          min:0,   max:10, step:0.01,  unit:'%' },
-  { k:'beta', name:'β, beta (S&amp;P 500 = 1)',                              min:0,   max:2,  step:0.01,  unit:''  },
-  { k:'erp',  name:'ERP, equity risk premium',                                min:0,   max:10, step:0.01,  unit:'%' },
-  { k:'g1',   name:'g₁, next-year earnings growth <small>(FactSet 2027: 15.2%)</small>', min:-30, max:50, step:0.1, unit:'%' },
-  { k:'g',    name:'g, long-run growth <small>(forever, must stay below r)</small>',     min:0,   max:9,  step:0.005, unit:'%' }
-];
+// Embedded values from Sep 25, 2026. Used as-is if data.json cannot be loaded (for example when the file is opened from disk).
+let TODAY = { rf:5.18, beta:1.00, erp:4.14, g:4.145, D1:400.55, dy:1.05 };
+let FS_G1 = 15.2; // FactSet CY2027 EPS growth estimate, Sep 18, 2026
+let FS_YEAR = 2027;
+let YEAR, TODAYSET, SL, T;
 const $ = id => document.getElementById(id);
 const f2 = x => x.toFixed(2);
 const pct = x => f2(x) + '%';
@@ -135,6 +129,43 @@ const sgn = x => (x > 0 ? '+' : x < 0 ? '−' : '±') + f2(Math.abs(x));
 const lvl = x => isFinite(x) ? x.toLocaleString(undefined,{maximumFractionDigits:0}) : 'undefined';
 const fmt = (s, v) => s.unit === '%' ? (s.k === 'g1' ? v.toFixed(1) + '%' : pct(v)) : f2(v);
 
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const md = iso => { const [, m, d] = iso.split('-').map(Number); return MON[m-1] + ' ' + d; };
+const mdy = iso => md(iso) + ', ' + iso.slice(0, 4);
+const n2 = x => x.toLocaleString('en-US', { minimumFractionDigits:2, maximumFractionDigits:2 });
+
+// Load today's inputs from data.json (refreshed daily by a GitHub Action) and rewrite the labels and notes.
+function applyData(d) {
+  const v = k => { const x = d[k] && d[k].value; if (typeof x !== 'number' || !isFinite(x)) throw new Error('bad ' + k); return x; };
+  const t = { rf:v('rf'), beta:v('beta'), erp:v('erp'), g:v('g'), D1:v('D1'), dy:v('dy') };
+  const g1 = v('g1_default'), yr = d.g1_default.year, spx = v('spx'), pe = v('fwd_pe'), ref = d.fwd_pe.spx_ref;
+  const r = t.rf + t.beta * t.erp;
+  if (!(t.g < r) || typeof ref !== 'number') throw new Error('inconsistent data.json');
+  const spxWhen = d.spx.time ? `${md(d.spx.as_of)}, ${d.spx.time}` : `${md(d.spx.as_of)} close`;
+  const noteToday = `Today's values: 10-year ${pct(t.rf)} (Treasury curve, ${md(d.rf.as_of)} close). ERP ${pct(t.erp)} (Damodaran implied ERP, ${mdy(d.erp.as_of)}). β = ${+t.beta.toFixed(2)} for the index. D₁ = ${usd(t.D1)}, forward 12-month S&amp;P 500 EPS from FactSet's forward P/E of ${pe.toFixed(1)} at ${n2(ref)} on ${md(d.fwd_pe.spx_ref_date)}. Dividend yield ${pct(t.dy)} (multpl.com, S&amp;P data, ${md(d.dy.as_of)} close). Long-run g = ${t.g.toFixed(3)}% is backed out as r − D₁/P so today's price matches the S&amp;P 500 at ${n2(spx)} (${spxWhen}).`;
+  const noteG1 = `g₁ starts at FactSet's CY${yr} S&amp;P 500 earnings growth estimate of ${g1.toFixed(1)}% (Earnings Insight, ${mdy(d.g1_default.as_of)}), which lifts D₁ to ${usd(t.D1 * (1 + g1/100))}. It is kept separate from long-run g because Gordon's g lasts forever and must stay below r` + (g1 >= r ? `; ${g1.toFixed(1)}% as long-run g would give r − g below zero and no price.` : '.');
+  TODAY = t; FS_G1 = g1; FS_YEAR = yr;
+  $('T_hdr').textContent = `(${mdy(d.spx.as_of)}, fixed)`;
+  $('note_today').innerHTML = noteToday;
+  $('note_g1').innerHTML = noteG1;
+}
+
+function model(rf, beta, erp, g, D1){
+  const rp = beta * erp, r = rf + rp, gap = r - g;
+  return { rp, r, gap, P: gap > 0 ? D1 / (gap/100) : NaN };
+}
+
+function start() {
+YEAR = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:FS_G1, g:TODAY.g };
+TODAYSET = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:0, g:TODAY.g };
+SL = [
+  { k:'rf',   name:'r<sub>f</sub>, 10-year yield',                          min:0,   max:10, step:0.01,  unit:'%' },
+  { k:'beta', name:'β, beta (S&amp;P 500 = 1)',                              min:0,   max:2,  step:0.01,  unit:''  },
+  { k:'erp',  name:'ERP, equity risk premium',                                min:0,   max:10, step:0.01,  unit:'%' },
+  { k:'g1',   name:`g₁, next-year earnings growth <small>(FactSet ${FS_YEAR}: ${FS_G1.toFixed(1)}%)</small>`, min:-30, max:Math.max(50, Math.ceil(FS_G1)), step:0.1, unit:'%' },
+  { k:'g',    name:'g, long-run growth <small>(forever, must stay below r)</small>',     min:0,   max:9,  step:0.001, unit:'%' }
+];
+
 SL.forEach(s => {
   const d = document.createElement('div'); d.className = 'row';
   d.innerHTML = `<label><span>${s.name}</span> <b id="${s.k}v"></b></label>
@@ -142,18 +173,18 @@ SL.forEach(s => {
   $('sliders').appendChild(d);
 });
 
-function model(rf, beta, erp, g, D1){
-  const rp = beta * erp, r = rf + rp, gap = r - g;
-  return { rp, r, gap, P: gap > 0 ? D1 / (gap/100) : NaN };
-}
-
-const T = model(TODAY.rf, TODAY.beta, TODAY.erp, TODAY.g, TODAY.D1);
+T = model(TODAY.rf, TODAY.beta, TODAY.erp, TODAY.g, TODAY.D1);
 $('T_rf').textContent = pct(TODAY.rf); $('T_beta').textContent = f2(TODAY.beta);
 $('T_erp').textContent = pct(TODAY.erp); $('T_g').textContent = pct(TODAY.g);
 $('T_D1').textContent = usd(TODAY.D1); $('T_dy').textContent = pct(TODAY.dy);
 $('T_r').textContent = pct(T.r);
 $('T_pf').textContent = `${f2(TODAY.D1)} / (${pct(T.r)} − ${pct(TODAY.g)})`;
 $('T_p').textContent = lvl(T.P);
+document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
+$('reset').onclick = () => { SL.forEach(s => $(s.k).value = YEAR[s.k]); calc(); };
+$('today').onclick = () => { SL.forEach(s => $(s.k).value = TODAYSET[s.k]); calc(); };
+calc();
+}
 
 function calc(){
   const Y = {}; SL.forEach(s => { Y[s.k] = parseFloat($(s.k).value); $(s.k+'v').textContent = fmt(s, Y[s.k]); });
@@ -195,10 +226,11 @@ function calc(){
   const help = dg > dr + 1e-9, flat = Math.abs(dg - dr) < 1e-9;
   $('mult').textContent = `Multiple test: Δg ${sgn(dg)} vs Δr ${sgn(dr)}, so valuation is ${flat ? 'neutral' : help ? 'helping' : 'hurting'}`;
 }
-document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
-$('reset').onclick = () => { SL.forEach(s => $(s.k).value = YEAR[s.k]); calc(); };
-$('today').onclick = () => { SL.forEach(s => $(s.k).value = TODAYSET[s.k]); calc(); };
-calc();
+fetch('data.json?v=' + Date.now(), { cache:'no-store' })
+  .then(r => r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)))
+  .then(applyData)
+  .catch(e => console.warn('Using embedded values; data.json not loaded:', e))
+  .finally(start);
 </script>
 </body>
 </html>

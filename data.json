@@ -1,0 +1,72 @@
+{
+  "updated_at": "2026-09-25T18:10:00Z",
+  "rf": {
+    "value": 5.18,
+    "unit": "%",
+    "as_of": "2026-09-24",
+    "update": "daily",
+    "source": "US Treasury daily par yield curve, 10-year",
+    "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve"
+  },
+  "beta": {
+    "value": 1.0,
+    "as_of": null,
+    "update": "manual",
+    "source": "By definition for the index",
+    "url": null
+  },
+  "erp": {
+    "value": 4.14,
+    "unit": "%",
+    "as_of": "2026-09-01",
+    "update": "manual",
+    "source": "Damodaran implied ERP",
+    "url": "https://pages.stern.nyu.edu/~adamodar/New_Home_Page/datafile/implpr.html"
+  },
+  "dy": {
+    "value": 1.05,
+    "unit": "%",
+    "as_of": "2026-09-24",
+    "update": "manual",
+    "source": "multpl.com (S&P data)",
+    "url": "https://www.multpl.com/s-p-500-dividend-yield"
+  },
+  "spx": {
+    "value": 7740.28,
+    "as_of": "2026-09-25",
+    "time": "11:10 AM PT",
+    "update": "daily",
+    "source": "S&P 500 level (manual intraday snapshot)",
+    "url": null
+  },
+  "fwd_pe": {
+    "value": 19.1,
+    "spx_ref": 7650.5,
+    "spx_ref_date": "2026-09-18",
+    "report_date": "2026-09-18",
+    "update": "weekly",
+    "source": "FactSet Earnings Insight, forward 12-month P/E",
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091826.pdf"
+  },
+  "D1": {
+    "value": 400.55,
+    "as_of": "2026-09-18",
+    "update": "derived",
+    "formula": "fwd_pe.spx_ref / fwd_pe.value"
+  },
+  "g": {
+    "value": 4.145,
+    "as_of": "2026-09-25",
+    "update": "derived",
+    "formula": "rf + beta * erp - D1 / spx * 100"
+  },
+  "g1_default": {
+    "value": 15.2,
+    "unit": "%",
+    "year": 2027,
+    "as_of": "2026-09-18",
+    "update": "weekly",
+    "source": "FactSet Earnings Insight, CY2027 S&P 500 EPS growth estimate",
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_091826.pdf"
+  }
+}
