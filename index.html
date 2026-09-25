@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Stocks or Bonds? Gordon + CAPM</title>
+<style>
+  :root { --bg:#0f1115; --card:#181b22; --line:#2a2f3a; --txt:#e6e8ee; --dim:#9aa3b2; --r:#f59e0b; --g:#22c55e; --bad:#ef4444; }
+  * { box-sizing:border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font:15px/1.45 system-ui,-apple-system,Segoe UI,Roboto,sans-serif; }
+  .wrap { max-width:980px; margin:0 auto; padding:24px 18px 40px; }
+  h1 { font-size:22px; margin:0 0 4px; }
+  .sub { color:var(--dim); margin:0 0 18px; }
+  .mono { font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .formulas { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; margin-bottom:16px; font-size:14px; }
+  .formulas div { margin:3px 0; }
+  .formulas .lbl { color:var(--dim); display:inline-block; width:175px; }
+  .verdict { border-radius:14px; padding:18px; text-align:center; margin-bottom:16px; }
+  .verdict .q { font-size:15px; opacity:.9; }
+  .verdict .ans { font-size:40px; font-weight:800; letter-spacing:1px; margin:4px 0; }
+  .verdict .why { font-size:15px; }
+  .verdict .mult { font-size:14px; margin-top:6px; opacity:.9; }
+  .stocks { background:#14532d; border:2px solid var(--g); }
+  .bonds  { background:#4a2a07; border:2px solid var(--r); }
+  .cols { display:grid; grid-template-columns:1fr 1.4fr; gap:16px; }
+  @media (max-width:760px){ .cols { grid-template-columns:1fr; } }
+  .card { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:14px 16px; }
+  .card h2 { font-size:16px; margin:0 0 10px; }
+  .card h2 span { color:var(--dim); font-weight:400; }
+  .fixed > div:not(.out) { display:flex; justify-content:space-between; margin:9px 0; font-size:14px; }
+  .fixed > div b { font-family:ui-monospace,Menlo,Consolas,monospace; }
+  .row { margin:10px 0 14px; }
+  .row label { display:flex; justify-content:space-between; gap:10px; font-size:14px; }
+  .row label b { font-family:ui-monospace,Menlo,Consolas,monospace; white-space:nowrap; }
+  .row small { color:var(--dim); font-size:12px; }
+  input[type=range] { width:100%; accent-color:#60a5fa; }
+  .out { border-top:1px solid var(--line); margin-top:8px; padding-top:10px; font-size:14px; }
+  .out div { margin:4px 0; }
+  .big { font-size:20px; font-weight:700; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  td, th { padding:7px 8px; border-bottom:1px solid var(--line); text-align:right; font-family:ui-monospace,Menlo,Consolas,monospace; }
+  th:first-child, td:first-child { text-align:left; font-family:system-ui,sans-serif; }
+  .mt { margin-top:16px; }
+  .warn { color:var(--bad); }
+  .note { color:var(--dim); font-size:13px; margin-top:14px; }
+  button { background:#1f2937; color:var(--txt); border:1px solid var(--line); border-radius:8px; padding:6px 12px; cursor:pointer; margin-top:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Stocks or Bonds?</h1>
+  <p class="sub">Set where you think the market will be a year from now. The page prices the S&amp;P 500 with Gordon + CAPM and compares a year of stock returns to buying the 10-year today.</p>
+
+  <div class="formulas">
+    <div><span class="lbl">CAPM (required return)</span><span class="mono">r = r<sub>f</sub> + β × ERP</span></div>
+    <div><span class="lbl">Gordon (price)</span><span class="mono">P = D₁ / (r − g)</span></div>
+    <div><span class="lbl">Combined</span><span class="mono">P = D₁ / (r<sub>f</sub> + β × ERP − g)</span></div>
+    <div><span class="lbl">Next year's earnings</span><span class="mono">D₁ (1 yr out) = D₁ today × (1 + g₁)</span></div>
+    <div><span class="lbl">Rule</span><span class="mono">buy stocks if (P₁/P₀ − 1) + dividend yield &gt; 10-year yield today</span></div>
+  </div>
+
+  <div id="verdict" class="verdict">
+    <div class="q">Does a year in stocks beat locking in the 10-year today?</div>
+    <div class="ans" id="ans">…</div>
+    <div class="why mono" id="why"></div>
+    <div class="mult mono" id="mult"></div>
+  </div>
+
+  <div class="cols">
+    <div class="card fixed">
+      <h2>Today <span>(Sep 25, 2026, fixed)</span></h2>
+      <div><span>r<sub>f</sub>, 10-year yield</span><b id="T_rf"></b></div>
+      <div><span>β, beta</span><b id="T_beta"></b></div>
+      <div><span>ERP, equity risk premium</span><b id="T_erp"></b></div>
+      <div><span>g, long-run growth (market-implied)</span><b id="T_g"></b></div>
+      <div><span>D₁, forward 12-mo earnings</span><b id="T_D1"></b></div>
+      <div><span>Dividend yield</span><b id="T_dy"></b></div>
+      <div class="out mono" style="display:block">
+        <div>r = <span id="T_r"></span></div>
+        <div>P = <span id="T_pf"></span></div>
+        <div class="big">S&amp;P 500 = <span id="T_p"></span></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>A year from now <span>(your call)</span></h2>
+      <div id="sliders"></div>
+      <div class="out mono">
+        <div>D₁ = <span id="Y_d0"></span> × (1 + <span id="Y_g1"></span>) = <b id="Y_D1"></b></div>
+        <div>r = <span id="Y_rf"></span> + <span id="Y_b"></span> × <span id="Y_e"></span> = <b id="Y_r"></b></div>
+        <div>P = <span id="Y_d"></span> / (<span id="Y_rr"></span> − <span id="Y_g"></span>)</div>
+        <div class="big">S&amp;P 500 = <span id="Y_p"></span></div>
+      </div>
+      <button id="reset">Reset to FactSet outlook</button> <button id="today">Set all to today</button>
+    </div>
+  </div>
+
+  <div class="card mt">
+    <table>
+      <tr><th></th><th>Today</th><th>1 year out</th><th>Change</th></tr>
+      <tr><td>r<sub>f</sub> (10-year yield)</td><td id="a_rf"></td><td id="b_rf"></td><td id="d_rf"></td></tr>
+      <tr><td>β × ERP (risk premium)</td><td id="a_rp"></td><td id="b_rp"></td><td id="d_rp"></td></tr>
+      <tr><td><b>r</b> (required return)</td><td id="a_r"></td><td id="b_r"></td><td id="d_r"></td></tr>
+      <tr><td><b>g</b> (long-run growth)</td><td id="a_g"></td><td id="b_g"></td><td id="d_g"></td></tr>
+      <tr><td>r − g (the gap)</td><td id="a_gap"></td><td id="b_gap"></td><td id="d_gap"></td></tr>
+      <tr><td>D₁ (forward earnings)</td><td id="a_D1"></td><td id="b_D1"></td><td id="d_D1"></td></tr>
+      <tr><td><b>P</b> (S&amp;P 500 level)</td><td id="a_p"></td><td id="b_p"></td><td id="d_p"></td></tr>
+      <tr><td>Stock return, 1 yr (price + dividends)</td><td></td><td></td><td id="s_ret"></td></tr>
+      <tr><td>Bond return, 1 yr (10-year bought today)</td><td></td><td></td><td id="b_ret"></td></tr>
+    </table>
+  </div>
+
+  <p class="note">Today's values: 10-year 5.18% (Treasury curve, Sep 24 close). ERP 4.14% (Damodaran implied ERP, Sep 1, 2026). β = 1 for the index. D₁ = $400.55, forward 12-month S&amp;P 500 EPS from FactSet's forward P/E of 19.1 at 7,650.50 on Sep 18. Dividend yield 1.05% (multpl.com, S&amp;P data, Sep 24 close). Long-run g = 4.145% is backed out as r − D₁/P so today's price matches the S&amp;P 500 at 7,740.28 (Sep 25, 11:10 AM PT).</p>
+  <p class="note">g₁ starts at FactSet's CY2027 S&amp;P 500 earnings growth estimate of 15.2% (Earnings Insight, Sep 18, 2026), which lifts D₁ to $461.43. It is kept separate from long-run g because Gordon's g lasts forever and must stay below r; 15.2% as long-run g would give r − g below zero and no price.</p>
+  <p class="note">The second line in the banner is the multiple test: Δg &gt; Δr means the r − g gap is shrinking and valuations are helping; otherwise they are hurting. The bond return assumes you hold the 10-year and collect its yield for a year (price changes on the bond are ignored). Not advice.</p>
+</div>
+
+<script>
+const TODAY = { rf:5.18, beta:1.00, erp:4.14, g:4.145, D1:400.55, dy:1.05 };
+const FS_G1 = 15.2; // FactSet CY2027 EPS growth estimate, Sep 18, 2026
+const YEAR = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:FS_G1, g:TODAY.g };
+const TODAYSET = { rf:TODAY.rf, beta:TODAY.beta, erp:TODAY.erp, g1:0, g:TODAY.g };
+const SL = [
+  { k:'rf',   name:'r<sub>f</sub>, 10-year yield',                          min:0,   max:10, step:0.01,  unit:'%' },
+  { k:'beta', name:'β, beta (S&amp;P 500 = 1)',                              min:0,   max:2,  step:0.01,  unit:''  },
+  { k:'erp',  name:'ERP, equity risk premium',                                min:0,   max:10, step:0.01,  unit:'%' },
+  { k:'g1',   name:'g₁, next-year earnings growth <small>(FactSet 2027: 15.2%)</small>', min:-30, max:50, step:0.1, unit:'%' },
+  { k:'g',    name:'g, long-run growth <small>(forever, must stay below r)</small>',     min:0,   max:9,  step:0.005, unit:'%' }
+];
+const $ = id => document.getElementById(id);
+const f2 = x => x.toFixed(2);
+const pct = x => f2(x) + '%';
+const usd = x => '$' + f2(x);
+const sgn = x => (x > 0 ? '+' : x < 0 ? '−' : '±') + f2(Math.abs(x));
+const lvl = x => isFinite(x) ? x.toLocaleString(undefined,{maximumFractionDigits:0}) : 'undefined';
+const fmt = (s, v) => s.unit === '%' ? (s.k === 'g1' ? v.toFixed(1) + '%' : pct(v)) : f2(v);
+
+SL.forEach(s => {
+  const d = document.createElement('div'); d.className = 'row';
+  d.innerHTML = `<label><span>${s.name}</span> <b id="${s.k}v"></b></label>
+    <input type="range" id="${s.k}" min="${s.min}" max="${s.max}" step="${s.step}" value="${YEAR[s.k]}">`;
+  $('sliders').appendChild(d);
+});
+
+function model(rf, beta, erp, g, D1){
+  const rp = beta * erp, r = rf + rp, gap = r - g;
+  return { rp, r, gap, P: gap > 0 ? D1 / (gap/100) : NaN };
+}
+
+const T = model(TODAY.rf, TODAY.beta, TODAY.erp, TODAY.g, TODAY.D1);
+$('T_rf').textContent = pct(TODAY.rf); $('T_beta').textContent = f2(TODAY.beta);
+$('T_erp').textContent = pct(TODAY.erp); $('T_g').textContent = pct(TODAY.g);
+$('T_D1').textContent = usd(TODAY.D1); $('T_dy').textContent = pct(TODAY.dy);
+$('T_r').textContent = pct(T.r);
+$('T_pf').textContent = `${f2(TODAY.D1)} / (${pct(T.r)} − ${pct(TODAY.g)})`;
+$('T_p').textContent = lvl(T.P);
+
+function calc(){
+  const Y = {}; SL.forEach(s => { Y[s.k] = parseFloat($(s.k).value); $(s.k+'v').textContent = fmt(s, Y[s.k]); });
+  const D1 = TODAY.D1 * (1 + Y.g1/100);
+  const M = model(Y.rf, Y.beta, Y.erp, Y.g, D1);
+  $('Y_d0').textContent = f2(TODAY.D1); $('Y_g1').textContent = Y.g1.toFixed(1) + '%'; $('Y_D1').textContent = usd(D1);
+  $('Y_rf').textContent = pct(Y.rf); $('Y_b').textContent = f2(Y.beta); $('Y_e').textContent = pct(Y.erp);
+  $('Y_r').textContent = pct(M.r); $('Y_d').textContent = f2(D1); $('Y_rr').textContent = pct(M.r); $('Y_g').textContent = pct(Y.g);
+  const yp = $('Y_p');
+  if (M.gap > 0) { yp.textContent = lvl(M.P); yp.className = ''; }
+  else { yp.textContent = 'undefined (r must be above g)'; yp.className = 'warn'; }
+
+  const rows = { rf:[TODAY.rf, Y.rf], rp:[T.rp, M.rp], r:[T.r, M.r], g:[TODAY.g, Y.g], gap:[T.gap, M.gap] };
+  for (const k in rows) {
+    $('a_'+k).textContent = pct(rows[k][0]); $('b_'+k).textContent = pct(rows[k][1]);
+    $('d_'+k).textContent = sgn(rows[k][1] - rows[k][0]) + ' pts';
+  }
+  $('a_D1').textContent = usd(TODAY.D1); $('b_D1').textContent = usd(D1);
+  $('d_D1').textContent = sgn((D1/TODAY.D1 - 1)*100) + '%';
+  $('a_p').textContent = lvl(T.P); $('b_p').textContent = lvl(M.P);
+
+  const priceRet = isFinite(M.P) ? (M.P/T.P - 1)*100 : NaN;
+  const stockRet = priceRet + TODAY.dy, bondRet = TODAY.rf;
+  $('d_p').textContent = isFinite(priceRet) ? sgn(priceRet) + '%' : '—';
+  $('s_ret').textContent = isFinite(stockRet) ? sgn(stockRet) + '%' : '—';
+  $('b_ret').textContent = '+' + pct(bondRet);
+
+  const V = $('verdict');
+  if (!isFinite(stockRet)) {
+    V.className = 'verdict bonds'; $('ans').textContent = 'NO PRICE';
+    $('why').textContent = 'r must be above long-run g for Gordon to give a price';
+  } else {
+    const yes = stockRet > bondRet;
+    V.className = 'verdict ' + (yes ? 'stocks' : 'bonds');
+    $('ans').textContent = yes ? 'BUY STOCKS' : 'BUY BONDS';
+    $('why').textContent = `Stocks ${sgn(stockRet)}% ${yes ? '>' : stockRet === bondRet ? '=' : '<'} 10-year +${pct(bondRet)}  (edge ${sgn(stockRet - bondRet)} pts)`;
+  }
+  const dr = M.r - T.r, dg = Y.g - TODAY.g;
+  const help = dg > dr + 1e-9, flat = Math.abs(dg - dr) < 1e-9;
+  $('mult').textContent = `Multiple test: Δg ${sgn(dg)} vs Δr ${sgn(dr)}, so valuation is ${flat ? 'neutral' : help ? 'helping' : 'hurting'}`;
+}
+document.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', calc));
+$('reset').onclick = () => { SL.forEach(s => $(s.k).value = YEAR[s.k]); calc(); };
+$('today').onclick = () => { SL.forEach(s => $(s.k).value = TODAYSET[s.k]); calc(); };
+calc();
+</script>
+</body>
+</html>
