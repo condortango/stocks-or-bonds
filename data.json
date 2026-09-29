@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-09-28T20:07:42Z",
+  "updated_at": "2026-09-29T18:39:01Z",
   "rf": {
     "value": 5.24,
     "unit": "%",
@@ -32,8 +32,8 @@
     "url": "https://www.multpl.com/s-p-500-dividend-yield"
   },
   "spx": {
-    "value": 7743.41,
-    "as_of": "2026-09-25",
+    "value": 7683.69,
+    "as_of": "2026-09-28",
     "time": null,
     "update": "daily",
     "source": "S&P 500 close (FRED SP500)",
@@ -55,7 +55,7 @@
     "formula": "fwd_pe.spx_ref / fwd_pe.value"
   },
   "g": {
-    "value": 4.198,
+    "value": 4.158,
     "as_of": "2026-09-28",
     "update": "derived",
     "formula": "rf + beta * erp - D1 / spx * 100"
