@@ -145,9 +145,13 @@ function applyData(d) {
   const noteToday = `Today's values: 10-year ${pct(t.rf)} (Treasury curve, ${md(d.rf.as_of)} close). ERP ${pct(t.erp)} (Damodaran implied ERP, ${mdy(d.erp.as_of)}). β = ${+t.beta.toFixed(2)} for the index. D₁ = ${usd(t.D1)}, forward 12-month S&amp;P 500 EPS from FactSet's forward P/E of ${pe.toFixed(1)} at ${n2(ref)} on ${md(d.fwd_pe.spx_ref_date)}. Dividend yield ${pct(t.dy)} (multpl.com, S&amp;P data, ${md(d.dy.as_of)} close). Long-run g = ${t.g.toFixed(3)}% is backed out as r − D₁/P so today's price matches the S&amp;P 500 at ${n2(spx)} (${spxWhen}).`;
   const noteG1 = `g₁ starts at FactSet's CY${yr} S&amp;P 500 earnings growth estimate of ${g1.toFixed(1)}% (Earnings Insight, ${mdy(d.g1_default.as_of)}), which lifts D₁ to ${usd(t.D1 * (1 + g1/100))}. It is kept separate from long-run g because Gordon's g lasts forever and must stay below r` + (g1 >= r ? `; ${g1.toFixed(1)}% as long-run g would give r − g below zero and no price.` : '.');
   TODAY = t; FS_G1 = g1; FS_YEAR = yr;
-  // Header shows the newest daily input (the 10-year often posts a day before FRED's S&P close).
+  // Header shows the refresh date, plus the newest daily close when that is an earlier day
+  // (a morning refresh can only have the prior session's close).
   const asOf = [d.rf.as_of, d.spx.as_of].filter(Boolean).sort().pop();
-  $('T_hdr').textContent = `(${mdy(asOf)}, fixed)`;
+  const refreshed = d.updated_at ? d.updated_at.slice(0, 10) : asOf;
+  $('T_hdr').textContent = refreshed > asOf
+    ? `(${mdy(refreshed)}, ${md(asOf)} close, fixed)`
+    : `(${mdy(asOf)}, fixed)`;
   $('note_today').innerHTML = noteToday;
   $('note_g1').innerHTML = noteG1;
 }
