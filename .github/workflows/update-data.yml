@@ -21,6 +21,10 @@ jobs:
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
+        with:
+          # Check out the branch tip, not the triggering SHA: a run queued behind another
+          # (concurrency group) would otherwise start from a stale data.json.
+          ref: ${{ github.ref_name }}
 
       - uses: actions/setup-python@v7
         with:
@@ -45,7 +49,9 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add data.json
           git commit -m "Update data.json ($(date -u +%Y-%m-%d))"
-          git pull --rebase origin "${GITHUB_REF_NAME}"
+          # data.json is fully regenerated, so on a conflict keep this run's version
+          # (during a rebase, "theirs" is the commit being replayed).
+          git pull --rebase -X theirs origin "${GITHUB_REF_NAME}"
           git push origin "HEAD:${GITHUB_REF_NAME}"
           echo "changed=true" >> "$GITHUB_OUTPUT"
 
