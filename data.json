@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-10-03T17:18:29Z",
+  "updated_at": "2026-10-06T18:54:53Z",
   "rf": {
-    "value": 5.28,
+    "value": 5.31,
     "unit": "%",
-    "as_of": "2026-10-02",
+    "as_of": "2026-10-05",
     "update": "daily",
     "source": "US Treasury daily par yield curve, 10-year",
     "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve"
@@ -32,8 +32,8 @@
     "url": "https://www.multpl.com/s-p-500-dividend-yield"
   },
   "spx": {
-    "value": 7722.72,
-    "as_of": "2026-10-02",
+    "value": 7773.95,
+    "as_of": "2026-10-05",
     "time": null,
     "update": "daily",
     "source": "S&P 500 close (FRED SP500)",
@@ -55,8 +55,8 @@
     "formula": "fwd_pe.spx_ref / fwd_pe.value"
   },
   "g": {
-    "value": 4.195,
-    "as_of": "2026-10-02",
+    "value": 4.26,
+    "as_of": "2026-10-05",
     "update": "derived",
     "formula": "rf + beta * erp - D1 / spx * 100"
   },
