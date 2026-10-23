@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-10-22T17:59:27Z",
+  "updated_at": "2026-10-23T17:52:44Z",
   "rf": {
-    "value": 5.13,
+    "value": 4.96,
     "unit": "%",
-    "as_of": "2026-10-21",
+    "as_of": "2026-10-22",
     "update": "daily",
     "source": "US Treasury daily par yield curve, 10-year",
     "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve"
@@ -40,23 +40,23 @@
     "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500"
   },
   "fwd_pe": {
-    "value": 19.0,
-    "spx_ref": 7744.06,
-    "spx_ref_date": "2026-10-15",
-    "report_date": "2026-10-16",
+    "value": 18.7,
+    "spx_ref": 7663.43,
+    "spx_ref_date": "2026-10-22",
+    "report_date": "2026-10-23",
     "update": "weekly",
     "source": "FactSet Earnings Insight, forward 12-month P/E",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102326.pdf"
   },
   "D1": {
-    "value": 407.58,
-    "as_of": "2026-10-15",
+    "value": 409.81,
+    "as_of": "2026-10-22",
     "update": "derived",
     "formula": "fwd_pe.spx_ref / fwd_pe.value"
   },
   "g": {
-    "value": 4.016,
-    "as_of": "2026-10-21",
+    "value": 3.817,
+    "as_of": "2026-10-22",
     "update": "derived",
     "formula": "rf + beta * erp - D1 / spx * 100"
   },
@@ -64,9 +64,9 @@
     "value": 16.0,
     "unit": "%",
     "year": 2027,
-    "as_of": "2026-10-16",
+    "as_of": "2026-10-23",
     "update": "weekly",
     "source": "FactSet Earnings Insight, CY2027 S&P 500 EPS growth estimate",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_101626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_102326.pdf"
   }
 }
