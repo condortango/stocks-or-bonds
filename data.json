@@ -1,5 +1,5 @@
 {
-  "updated_at": "2026-11-12T20:49:48Z",
+  "updated_at": "2026-11-13T20:29:30Z",
   "rf": {
     "value": 5.1,
     "unit": "%",
@@ -32,41 +32,41 @@
     "url": "https://www.multpl.com/s-p-500-dividend-yield"
   },
   "spx": {
-    "value": 7619.38,
-    "as_of": "2026-11-11",
+    "value": 7592.4,
+    "as_of": "2026-11-12",
     "time": null,
     "update": "daily",
     "source": "S&P 500 close (FRED SP500)",
     "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500"
   },
   "fwd_pe": {
-    "value": 17.7,
-    "spx_ref": 7353.73,
-    "spx_ref_date": "2026-11-05",
-    "report_date": "2026-11-06",
+    "value": 18.3,
+    "spx_ref": 7592.4,
+    "spx_ref_date": "2026-11-12",
+    "report_date": "2026-11-13",
     "update": "weekly",
     "source": "FactSet Earnings Insight, forward 12-month P/E",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf"
   },
   "D1": {
-    "value": 415.46,
-    "as_of": "2026-11-05",
+    "value": 414.89,
+    "as_of": "2026-11-12",
     "update": "derived",
     "formula": "fwd_pe.spx_ref / fwd_pe.value"
   },
   "g": {
-    "value": 3.787,
+    "value": 3.775,
     "as_of": "2026-11-12",
     "update": "derived",
     "formula": "rf + beta * erp - D1 / spx * 100"
   },
   "g1_default": {
-    "value": 16.1,
+    "value": 16.2,
     "unit": "%",
     "year": 2027,
-    "as_of": "2026-11-06",
+    "as_of": "2026-11-13",
     "update": "weekly",
     "source": "FactSet Earnings Insight, CY2027 S&P 500 EPS growth estimate",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_110626.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf"
   }
 }
