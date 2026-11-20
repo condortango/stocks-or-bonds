@@ -1,9 +1,9 @@
 {
-  "updated_at": "2026-11-19T21:36:00Z",
+  "updated_at": "2026-11-20T21:05:39Z",
   "rf": {
-    "value": 5.04,
+    "value": 4.92,
     "unit": "%",
-    "as_of": "2026-11-19",
+    "as_of": "2026-11-20",
     "update": "daily",
     "source": "US Treasury daily par yield curve, 10-year",
     "url": "https://home.treasury.gov/resource-center/data-chart-center/interest-rates/TextView?type=daily_treasury_yield_curve"
@@ -32,41 +32,41 @@
     "url": "https://www.multpl.com/s-p-500-dividend-yield"
   },
   "spx": {
-    "value": 7323.63,
-    "as_of": "2026-11-18",
+    "value": 7175.83,
+    "as_of": "2026-11-19",
     "time": null,
     "update": "daily",
     "source": "S&P 500 close (FRED SP500)",
     "url": "https://fred.stlouisfed.org/graph/fredgraph.csv?id=SP500"
   },
   "fwd_pe": {
-    "value": 18.3,
-    "spx_ref": 7592.4,
-    "spx_ref_date": "2026-11-12",
-    "report_date": "2026-11-13",
+    "value": 17.1,
+    "spx_ref": 7175.83,
+    "spx_ref_date": "2026-11-19",
+    "report_date": "2026-11-20",
     "update": "weekly",
     "source": "FactSet Earnings Insight, forward 12-month P/E",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_112026A.pdf"
   },
   "D1": {
-    "value": 414.89,
-    "as_of": "2026-11-12",
+    "value": 419.64,
+    "as_of": "2026-11-19",
     "update": "derived",
     "formula": "fwd_pe.spx_ref / fwd_pe.value"
   },
   "g": {
-    "value": 3.515,
-    "as_of": "2026-11-19",
+    "value": 3.212,
+    "as_of": "2026-11-20",
     "update": "derived",
     "formula": "rf + beta * erp - D1 / spx * 100"
   },
   "g1_default": {
-    "value": 16.2,
+    "value": 16.4,
     "unit": "%",
     "year": 2027,
-    "as_of": "2026-11-13",
+    "as_of": "2026-11-20",
     "update": "weekly",
     "source": "FactSet Earnings Insight, CY2027 S&P 500 EPS growth estimate",
-    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_111326.pdf"
+    "url": "https://advantage.factset.com/hubfs/Website/Resources%20Section/Research%20Desk/Earnings%20Insight/EarningsInsight_112026A.pdf"
   }
 }
